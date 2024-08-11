@@ -1,8 +1,8 @@
-// src/components/Sidebar.tsx
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import styles from './Layout.module.css';
+import { useRouter } from 'next/router';
+import styles from '../styles/Layout.module.css';
+import { supabase } from '../utils/supabaseClient';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -10,9 +10,33 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
-  // Placeholder data for restaurant details
-  const restaurantName = 'Hakka Garden';
-  const restaurantLocation = '2516 Cherokee Dr NW';
+  const router = useRouter();
+  const { restaurantId } = router.query;
+
+  const [restaurantName, setRestaurantName] = useState('');
+  const [restaurantLocation, setRestaurantLocation] = useState('');
+
+  useEffect(() => {
+    const fetchParentRestaurant = async () => {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select('name, location')
+        .is('parent_restaurant_id', null)
+        .eq('id', restaurantId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching parent restaurant:', error);
+      } else {
+        setRestaurantName(data?.name || 'Unknown Restaurant');
+        setRestaurantLocation(data?.location || 'Unknown Location');
+      }
+    };
+
+    if (restaurantId) {
+      fetchParentRestaurant();
+    }
+  }, [restaurantId]);
 
   return (
     <div className={styles['sidebar-container']}>
@@ -29,51 +53,51 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
         </div>
         <ul className={styles.menu}>
           <li>
-            <Link href="/overview" legacyBehavior>
-              <div className={styles.menuItem}>
+            <Link href={`/admin/restaurants/${restaurantId}/overview`} legacyBehavior>
+              <a className={styles.menuItem}>
                 <i className="fas fa-home"></i>
                 {isOpen && <span className={styles.menuText}>Overview</span>}
-              </div>
+              </a>
             </Link>
           </li>
           <li>
-            <Link href="/locations" legacyBehavior>
-              <div className={styles.menuItem}>
+            <Link href={`/admin/restaurants/${restaurantId}/locations`} legacyBehavior>
+              <a className={styles.menuItem}>
                 <i className="fas fa-map-marker-alt"></i>
                 {isOpen && <span className={styles.menuText}>Locations</span>}
-              </div>
+              </a>
             </Link>
           </li>
           <li>
-            <Link href="/financials" legacyBehavior>
-              <div className={styles.menuItem}>
+            <Link href={`/admin/restaurants/${restaurantId}/financials`} legacyBehavior>
+              <a className={styles.menuItem}>
                 <i className="fas fa-chart-pie"></i>
                 {isOpen && <span className={styles.menuText}>Financials</span>}
-              </div>
+              </a>
             </Link>
           </li>
           <li>
-            <Link href="/billing" legacyBehavior>
-              <div className={styles.menuItem}>
+            <Link href={`/admin/restaurants/${restaurantId}/billing`} legacyBehavior>
+              <a className={styles.menuItem}>
                 <i className="fas fa-file-invoice-dollar"></i>
                 {isOpen && <span className={styles.menuText}>Billing</span>}
-              </div>
+              </a>
             </Link>
           </li>
           <li>
-            <Link href="/settings" legacyBehavior>
-              <div className={styles.menuItem}>
+            <Link href={`/admin/restaurants/${restaurantId}/settings`} legacyBehavior>
+              <a className={styles.menuItem}>
                 <i className="fas fa-cogs"></i>
                 {isOpen && <span className={styles.menuText}>Settings</span>}
-              </div>
+              </a>
             </Link>
           </li>
           <li>
-            <Link href="/recommendations" legacyBehavior>
-              <div className={styles.menuItem}>
+            <Link href={`/admin/restaurants/${restaurantId}/recommendations`} legacyBehavior>
+              <a className={styles.menuItem}>
                 <i className="fas fa-lightbulb"></i>
                 {isOpen && <span className={styles.menuText}>Recommendations</span>}
-              </div>
+              </a>
             </Link>
           </li>
         </ul>

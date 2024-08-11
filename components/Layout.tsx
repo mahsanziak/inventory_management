@@ -1,25 +1,20 @@
-// src/components/Layout.tsx
-
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
-import styles from './Layout.module.css';
+import layoutStyles from '../styles/Layout.module.css';
 
-const Layout: React.FC = ({ children }) => {
-  const [isOpen, setIsOpen] = useState(true);
+const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const toggleSidebar = () => {
-    setIsOpen(!isOpen);
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   return (
-    <div className={styles.layout}>
-      <Sidebar isOpen={isOpen} toggleSidebar={toggleSidebar} />
-      <div
-        className={styles.content}
-        style={{ marginLeft: isOpen ? '250px' : '64px' }} // Dynamically adjust margin
-      >
+    <div className={layoutStyles.layoutContainer}>
+      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      <main className={`${layoutStyles.mainContent} ${isSidebarOpen ? layoutStyles.contentShift : ''}`}>
         {children}
-      </div>
+      </main>
     </div>
   );
 };
