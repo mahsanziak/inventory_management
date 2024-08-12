@@ -1,3 +1,5 @@
+// src/pages/admin/restaurants/[restaurantId]/locations.tsx
+
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../../../../utils/supabaseClient';
@@ -15,6 +17,8 @@ const Locations = () => {
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [acceptedOrders, setAcceptedOrders] = useState({});
   const [invoices, setInvoices] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState('All');
+  const [selectedYear, setSelectedYear] = useState('All');
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -44,12 +48,24 @@ const Locations = () => {
       .from('inventory_requests')
       .select('*, items(name, cost_per_unit)')
       .eq('restaurant_id', locationId)
-      .eq('status', 'accepted');
+      .eq('status', 'accepted')
+      .eq('pending_status', 'confirmed');
 
     if (orderError) {
       console.error('Error fetching orders:', orderError);
     } else {
-      const groupedOrders = orderData.reduce((acc, order) => {
+      const filteredOrders = orderData.filter((order) => {
+        const orderDate = new Date(order.created_at);
+        const orderMonth = orderDate.getMonth() + 1; // JavaScript months are 0-based
+        const orderYear = orderDate.getFullYear();
+
+        return (
+          (selectedMonth === 'All' || orderMonth === parseInt(selectedMonth)) &&
+          (selectedYear === 'All' || orderYear === parseInt(selectedYear))
+        );
+      });
+
+      const groupedOrders = filteredOrders.reduce((acc, order) => {
         const billingPeriod = order.billing_period || 'Unknown';
         if (!acc[billingPeriod]) {
           acc[billingPeriod] = [];
@@ -77,6 +93,20 @@ const Locations = () => {
     fetchAcceptedOrdersAndInvoices(locationId);
   };
 
+  const handleMonthChange = (month) => {
+    setSelectedMonth(month);
+    if (selectedLocation) {
+      fetchAcceptedOrdersAndInvoices(selectedLocation);
+    }
+  };
+
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+    if (selectedLocation) {
+      fetchAcceptedOrdersAndInvoices(selectedLocation);
+    }
+  };
+
   const handlePrint = () => {
     const invoice = document.getElementById('invoiceTemplate');
     if (invoice && html2pdf) {
@@ -85,7 +115,7 @@ const Locations = () => {
   };
 
   return (
-    <div className={styles.locations}>
+    <div className={styles.locationsContainer}>
       <h1>Locations</h1>
       <select onChange={(e) => handleLocationChange(e.target.value)} value={selectedLocation || ''}>
         <option value="" disabled>Select a location</option>
@@ -93,6 +123,30 @@ const Locations = () => {
           <option key={location.id} value={location.id}>{location.name}</option>
         ))}
       </select>
+
+      <select onChange={(e) => handleMonthChange(e.target.value)} value={selectedMonth}>
+        <option value="All">All</option>
+        <option value="1">January</option>
+        <option value="2">February</option>
+        <option value="3">March</option>
+        <option value="4">April</option>
+        <option value="5">May</option>
+        <option value="6">June</option>
+        <option value="7">July</option>
+        <option value="8">August</option>
+        <option value="9">September</option>
+        <option value="10">October</option>
+        <option value="11">November</option>
+        <option value="12">December</option>
+      </select>
+
+      <select onChange={(e) => handleYearChange(e.target.value)} value={selectedYear}>
+        <option value="All">All</option>
+        {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+          <option key={year} value={year}>{year}</option>
+        ))}
+      </select>
+      <button onClick={() => fetchAcceptedOrdersAndInvoices(selectedLocation)}>Filter</button>
 
       {selectedLocation && (
         <div className={styles.locationDetails}>
@@ -149,10 +203,9 @@ const Locations = () => {
               <tr>
                 <th>Invoice ID</th>
                 <th>Subtotal</th>
-                <th>Total</th>
                 <th>Due Date</th>
                 <th>Last Payment</th>
-                <th>Date and Time</th>
+                <th>Month</th>
               </tr>
             </thead>
             <tbody>
@@ -160,7 +213,6 @@ const Locations = () => {
                 <tr key={index}>
                   <td>{invoice.invoice_id}</td>
                   <td>${invoice.subtotal.toFixed(2)}</td>
-                  <td>${invoice.total.toFixed(2)}</td>
                   <td>{new Date(invoice.due_date).toLocaleDateString()}</td>
                   <td>{new Date(invoice.last_payment).toLocaleDateString()}</td>
                   <td>{new Date(invoice.created_at).toLocaleString()}</td>
@@ -217,3 +269,4 @@ const Locations = () => {
 };
 
 export default Locations;
+

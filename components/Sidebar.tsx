@@ -56,7 +56,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
             <Link href={`/admin/restaurants/${restaurantId}/overview`} legacyBehavior>
               <a className={styles.menuItem}>
                 <i className="fas fa-home"></i>
-                {isOpen && <span className={styles.menuText}>Overview</span>}
+                {isOpen && <span className={styles.menuText}>Dashboard</span>} {/* Updated from Overview to Dashboard */}
               </a>
             </Link>
           </li>

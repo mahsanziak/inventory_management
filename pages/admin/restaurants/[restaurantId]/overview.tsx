@@ -1,5 +1,3 @@
-// src/pages/admin/restaurants/[restaurantId]/overview.tsx
-
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import styles from '../../../../styles/Layout.module.css';
@@ -14,8 +12,8 @@ const Overview = () => {
   const [pastOrders, setPastOrders] = useState([]);
   const [restaurants, setRestaurants] = useState({});
   const [items, setItems] = useState({});
+  const [newOrderNotification, setNewOrderNotification] = useState(false);
 
-  // Fetch data from the database
   useEffect(() => {
     const fetchData = async () => {
       // Fetch restaurant data
@@ -74,7 +72,28 @@ const Overview = () => {
     };
 
     fetchData();
-  }, []); // Run the effect once on mount
+
+    // Subscribe to real-time updates for new pending orders
+    const channel = supabase
+      .channel('public:inventory_requests')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'inventory_requests' }, (payload) => {
+        if (payload.new.status === 'pending') {
+          setPendingOrders((prevOrders) => [...prevOrders, payload.new]);
+          setNewOrderNotification(true);
+
+          // Auto-hide the notification after 5 seconds
+          setTimeout(() => {
+            setNewOrderNotification(false);
+          }, 5000);
+        }
+      })
+      .subscribe();
+
+    // Cleanup the subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const handleAcceptOrder = async (orderId) => {
     const acceptedOrder = pendingOrders.find(order => order.id === orderId);
@@ -110,6 +129,13 @@ const Overview = () => {
     }
   };
 
+  const handleNotificationClick = () => {
+    setNewOrderNotification(false);
+    if (restaurantId) {
+      setActiveTab('pending');
+    }
+  };
+
   return (
     <div className={styles.overview}>
       <h1>Overview of All Orders</h1>
@@ -128,10 +154,17 @@ const Overview = () => {
         </button>
       </div>
 
+      {newOrderNotification && (
+        <div className={styles.notification} onClick={handleNotificationClick}>
+          <span>New order received! Click to view.</span>
+          <button onClick={() => setNewOrderNotification(false)} className={styles.closeButton}>×</button>
+        </div>
+      )}
+
       {activeTab === 'pending' && (
         <>
           <h2>Pending Orders</h2>
-          <div className={styles.restaurants}>
+          <div className={styles.restaurantsScrollable}>
             {pendingOrders.length > 0 ? (
               pendingOrders.map((order) => (
                 <div key={order.id} className={styles.restaurant}>
@@ -159,7 +192,7 @@ const Overview = () => {
       {activeTab === 'past' && (
         <>
           <h2>Past Orders</h2>
-          <div className={styles.restaurants}>
+          <div className={styles.restaurantsScrollable}>
             {pastOrders.length > 0 ? (
               pastOrders.map((order) => (
                 <div key={order.id} className={styles.restaurant}>

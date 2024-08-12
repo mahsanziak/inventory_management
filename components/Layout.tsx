@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
-import layoutStyles from '../styles/Layout.module.css';
+import styles from '../styles/Layout.module.css';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -10,9 +10,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   return (
-    <div className={layoutStyles.layoutContainer}>
+    <div className={styles.layoutContainer}>
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-      <main className={`${layoutStyles.mainContent} ${isSidebarOpen ? layoutStyles.contentShift : ''}`}>
+      <main className={`${styles.mainContent} ${isSidebarOpen ? styles.contentShift : ''}`}>
         {children}
       </main>
     </div>
