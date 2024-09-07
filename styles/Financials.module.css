@@ -1,0 +1,27 @@
+.financialsContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 50px; /* Add padding to position title at the top */
+    height: 100vh;
+  }
+  
+  .financialsTitle {
+    margin-bottom: 40px; /* Space between the title and the box */
+    font-size: 2rem;
+  }
+  
+  .comingSoonBox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    border: 2px solid #e5e7eb;
+    padding: 40px;
+    border-radius: 10px;
+    background-color: #f9fafb;
+    width: 400px;
+    height: 400px;
+    text-align: center;
+  }
+  

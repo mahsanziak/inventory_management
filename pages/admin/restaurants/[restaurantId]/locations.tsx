@@ -1,5 +1,3 @@
-// src/pages/admin/restaurants/[restaurantId]/locations.tsx
-
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../../../../utils/supabaseClient';
@@ -117,47 +115,49 @@ const Locations = () => {
   return (
     <div className={styles.locationsContainer}>
       <h1>Locations</h1>
-      <select onChange={(e) => handleLocationChange(e.target.value)} value={selectedLocation || ''}>
-        <option value="" disabled>Select a location</option>
-        {locations.map(location => (
-          <option key={location.id} value={location.id}>{location.name}</option>
-        ))}
-      </select>
+      <div className={styles.filtersContainer}>
+        <select onChange={(e) => handleLocationChange(e.target.value)} value={selectedLocation || ''} className={styles.dropdown}>
+          <option value="" disabled>Select a location</option>
+          {locations.map(location => (
+            <option key={location.id} value={location.id}>{location.name}</option>
+          ))}
+        </select>
 
-      <select onChange={(e) => handleMonthChange(e.target.value)} value={selectedMonth}>
-        <option value="All">All</option>
-        <option value="1">January</option>
-        <option value="2">February</option>
-        <option value="3">March</option>
-        <option value="4">April</option>
-        <option value="5">May</option>
-        <option value="6">June</option>
-        <option value="7">July</option>
-        <option value="8">August</option>
-        <option value="9">September</option>
-        <option value="10">October</option>
-        <option value="11">November</option>
-        <option value="12">December</option>
-      </select>
+        <select onChange={(e) => handleMonthChange(e.target.value)} value={selectedMonth} className={styles.dropdown}>
+          <option value="All">All</option>
+          <option value="1">January</option>
+          <option value="2">February</option>
+          <option value="3">March</option>
+          <option value="4">April</option>
+          <option value="5">May</option>
+          <option value="6">June</option>
+          <option value="7">July</option>
+          <option value="8">August</option>
+          <option value="9">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+        </select>
 
-      <select onChange={(e) => handleYearChange(e.target.value)} value={selectedYear}>
-        <option value="All">All</option>
-        {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-          <option key={year} value={year}>{year}</option>
-        ))}
-      </select>
-      <button onClick={() => fetchAcceptedOrdersAndInvoices(selectedLocation)}>Filter</button>
+        <select onChange={(e) => handleYearChange(e.target.value)} value={selectedYear} className={styles.dropdown}>
+          <option value="All">All</option>
+          {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+        <button onClick={() => fetchAcceptedOrdersAndInvoices(selectedLocation)} className={styles.filterButton}>Filter</button>
+      </div>
 
       {selectedLocation && (
         <div className={styles.locationDetails}>
-          <h2>{locations.find(loc => loc.id === selectedLocation)?.name}</h2>
+          <h2 className={styles.locationTitle}>{locations.find(loc => loc.id === selectedLocation)?.name}</h2>
 
           {/* Accepted Orders Section */}
-          <h3>Accepted Orders by Billing Period</h3>
+          <h3 className={styles.sectionTitle}>Accepted Orders by Billing Period</h3>
           {Object.keys(acceptedOrders).length > 0 ? (
             Object.keys(acceptedOrders).map((period) => (
-              <div key={period}>
-                <h4>Billing Period: {period}</h4>
+              <div key={period} className={styles.billingPeriod}>
+                <h4 className={styles.billingPeriodTitle}>Billing Period: {period}</h4>
                 <table className={styles.table}>
                   <thead>
                     <tr>
@@ -197,7 +197,7 @@ const Locations = () => {
           )}
 
           {/* Invoices Section */}
-          <h3>Invoices</h3>
+          <h3 className={styles.sectionTitle}>Invoices</h3>
           <table className={styles.table}>
             <thead>
               <tr>
@@ -237,17 +237,19 @@ const Locations = () => {
                 </tr>
               </thead>
               <tbody>
-                {Object.keys(acceptedOrders).map((period) => (
-                  acceptedOrders[period].map((order, index) => (
-                    <tr key={index}>
-                      <td>{order.items.name}</td>
-                      <td>${order.items.cost_per_unit.toFixed(2)}</td>
-                      <td>{order.quantity}</td>
-                      <td>${(order.quantity * order.items.cost_per_unit).toFixed(2)}</td>
-                    </tr>
-                  ))
-                ))}
-              </tbody>
+  {Object.keys(acceptedOrders).map((period) => (
+    acceptedOrders[period].map((order, index) => (
+      <tr key={index}>
+        <td>{order.items.name}</td>
+        <td>${order.items.cost_per_unit.toFixed(2)}</td>
+        <td>{order.quantity}</td>
+        <td>${(order.quantity * order.items.cost_per_unit).toFixed(2)}</td>
+        <td>{new Date(order.created_at).toLocaleString()}</td>
+      </tr>
+    ))
+  ))}
+</tbody>
+
               <tfoot>
                 <tr>
                   <td colSpan="3"><strong>Subtotal</strong></td>
@@ -269,4 +271,3 @@ const Locations = () => {
 };
 
 export default Locations;
-

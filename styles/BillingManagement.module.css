@@ -13,7 +13,8 @@
     font-weight: bold;
 }
 
-.settingsForm input, .settingsForm select {
+.settingsForm input,
+.settingsForm select {
     width: 100%;
     padding: 10px;
     margin-bottom: 20px;
@@ -45,7 +46,8 @@
     font-family: 'Montserrat', sans-serif;
 }
 
-.invoiceTable th, .invoiceTable td {
+.invoiceTable th,
+.invoiceTable td {
     padding: 12px 15px;
     border-bottom: 1px solid #ddd;
 }
@@ -58,17 +60,24 @@
 
 .backButton {
     margin-top: 20px;
-    padding: 10px 20px;
+    padding: 10px 15px;
     font-size: 1rem;
     background-color: #007bff;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 50px;
     cursor: pointer;
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
     font-family: 'Montserrat', sans-serif;
 }
 
 .backButton:hover {
     background-color: #0056b3;
+    transform: translateY(-2px);
 }

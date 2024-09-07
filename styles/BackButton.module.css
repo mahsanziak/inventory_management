@@ -1,0 +1,22 @@
+/* components/BackButton.module.css */
+.backButton {
+    display: flex;
+    align-items: center;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    color: #333; /* Adjust to match your theme */
+    padding: 10px;
+    transition: color 0.3s ease;
+  }
+  
+  .backButton:hover {
+    color: #1e90ff; /* Change to a hover color that matches your design */
+  }
+  
+  .backText {
+    margin-left: 5px;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+  

@@ -56,7 +56,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
             <Link href={`/admin/restaurants/${restaurantId}/overview`} legacyBehavior>
               <a className={styles.menuItem}>
                 <i className="fas fa-home"></i>
-                {isOpen && <span className={styles.menuText}>Dashboard</span>} {/* Updated from Overview to Dashboard */}
+                {isOpen && <span className={styles.menuText}>Dashboard</span>}
               </a>
             </Link>
           </li>
@@ -69,26 +69,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
             </Link>
           </li>
           <li>
-            <Link href={`/admin/restaurants/${restaurantId}/financials`} legacyBehavior>
-              <a className={styles.menuItem}>
-                <i className="fas fa-chart-pie"></i>
-                {isOpen && <span className={styles.menuText}>Financials</span>}
-              </a>
-            </Link>
-          </li>
-          <li>
-            <Link href={`/admin/restaurants/${restaurantId}/billing`} legacyBehavior>
-              <a className={styles.menuItem}>
-                <i className="fas fa-file-invoice-dollar"></i>
-                {isOpen && <span className={styles.menuText}>Billing</span>}
-              </a>
-            </Link>
-          </li>
-          <li>
             <Link href={`/admin/restaurants/${restaurantId}/settings`} legacyBehavior>
               <a className={styles.menuItem}>
                 <i className="fas fa-cogs"></i>
                 {isOpen && <span className={styles.menuText}>Settings</span>}
+              </a>
+            </Link>
+          </li>
+          <li>
+            <Link href={`/admin/restaurants/${restaurantId}/financials`} legacyBehavior>
+              <a className={styles.menuItem}>
+                <i className="fas fa-chart-pie"></i>
+                {isOpen && <span className={styles.menuText}>Financials</span>}
               </a>
             </Link>
           </li>
