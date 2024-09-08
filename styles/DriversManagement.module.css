@@ -1,0 +1,75 @@
+.container {
+    padding: 20px;
+    max-height: 100vh; /* Ensure full viewport height usage */
+    overflow-y: auto;  /* Enable vertical scrolling */
+  }
+  
+  .form {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  
+  .form input {
+    margin: 0 10px;
+    padding: 10px;
+    font-size: 16px;
+    width: 15%; /* Adjusted width to fit in one row */
+  }
+  
+  .form button {
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    width: 10%; /* Adjusted width for button */
+  }
+  
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .table th, .table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+  }
+  
+  .table th {
+    background-color: #f4f4f4;
+  }
+  
+  .table td button {
+    padding: 5px 10px;
+    margin-right: 5px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .table td button:hover {
+    background-color: #0056b3;
+  }
+  
+  .driverOrders {
+    margin-top: 40px;
+  }
+  
+  .driverOrders h3 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+  
+  /* Ensure scrollability in the driver orders section */
+  .driverOrders table {
+    width: 100%;
+  }
+  
+  .driverOrders tbody {
+    max-height: 300px;
+    overflow-y: auto; /* Allow scrolling inside the driver orders table */
+  }
+  

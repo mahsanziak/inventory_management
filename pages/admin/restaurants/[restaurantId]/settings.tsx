@@ -27,13 +27,12 @@ const Settings = () => {
         <h2 className={styles.cardHeader}>Billing Management</h2>
         <p className={styles.cardContent}>Handle billing and invoices.</p>
       </div>
-      <div className={styles.card} onClick={() => navigateTo('box2')}>
-        <h2 className={styles.cardHeader}>Box 2</h2>
-        <p className={styles.cardContent}>Additional settings option 2.</p>
+      <div className={styles.card} onClick={() => navigateTo('driversManagement')}>
+        <h2 className={styles.cardHeader}>Billing Management (Drivers)</h2>
+        <p className={styles.cardContent}>Manage and configure driver settings.</p>
       </div>
     </div>
   );
-  
 };
 
 export default Settings;
