@@ -1,75 +1,179 @@
 .container {
-    padding: 20px;
-    max-height: 100vh; /* Ensure full viewport height usage */
-    overflow-y: auto;  /* Enable vertical scrolling */
-  }
-  
-  .form {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-  }
-  
-  .form input {
-    margin: 0 10px;
-    padding: 10px;
-    font-size: 16px;
-    width: 15%; /* Adjusted width to fit in one row */
-  }
-  
-  .form button {
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-    width: 10%; /* Adjusted width for button */
-  }
-  
-  .table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .table th, .table td {
-    padding: 12px;
-    border: 1px solid #ddd;
-  }
-  
-  .table th {
-    background-color: #f4f4f4;
-  }
-  
-  .table td button {
-    padding: 5px 10px;
-    margin-right: 5px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-  }
-  
-  .table td button:hover {
-    background-color: #0056b3;
-  }
-  
-  .driverOrders {
-    margin-top: 40px;
-  }
-  
-  .driverOrders h3 {
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-  }
-  
-  /* Ensure scrollability in the driver orders section */
-  .driverOrders table {
-    width: 100%;
-  }
-  
-  .driverOrders tbody {
-    max-height: 300px;
-    overflow-y: auto; /* Allow scrolling inside the driver orders table */
-  }
-  
+  padding: 20px;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+.title {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.form {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Use gap to control spacing between elements */
+  margin-bottom: 20px;
+}
+
+.form input, .form select {
+  padding: 10px;
+  font-size: 16px;
+  flex: 1; /* Allows each input to take equal space */
+  min-width: 150px; /* Sets a minimum width to ensure they don't shrink too much */
+}
+
+.form button {
+  padding: 10px;
+  background-color: #3991f0;
+  color: white;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0; /* Prevents the button from shrinking */
+  margin-left: 10px; /* Optional: adds slight space between button and input fields */
+}
+
+
+
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+}
+
+.table th {
+  background-color: #f4f4f4;
+}
+
+.buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.editButton, .removeButton {
+  padding: 5px 15px;
+  border: 1px solid #005d35;
+  background: transparent;
+  color: #005d35;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.editButton:hover {
+  background-color: #e6f2ff;
+  color: #005d35;
+}
+
+.removeButton {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.removeButton:hover {
+  background-color: #ffe6e6;
+  color: #b30000;
+}
+
+.driverOrders {
+  margin-top: 40px;
+}
+
+.driverOrders h3 {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+}
+
+.driverOrders table {
+  width: 100%;
+}
+
+/* Modal styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+/* Modal content styling with increased width */
+.modalContent {
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  width: 80%; /* Increased width for a wider appearance */
+  max-width: 800px; /* Adjusted max-width for larger screens */
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Modal header styling */
+.modalContent h3 {
+  margin-bottom: 20px;
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Input and select field styling inside the modal */
+.modalContent input,
+.modalContent select {
+  width: calc(33.33% - 10px); /* Adjust width for three inputs */
+  padding: 10px;
+  margin: 10px 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Save button styling */
+.saveButton {
+  padding: 10px 20px;
+  border: none;
+  background-color: #28a745;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 15px;
+  font-size: 14px;
+  transition: background-color 0.3s, transform 0.2s;
+  display: block;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Hover effect for save button */
+.saveButton:hover {
+  background-color: #218838;
+  transform: scale(1.05);
+}
+
+/* Close icon adjustments */
+.closeIcon {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.3s;
+}
+
+.closeIcon:hover {
+  color: #333;
+}
