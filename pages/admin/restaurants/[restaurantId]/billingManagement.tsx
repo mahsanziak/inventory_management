@@ -4,15 +4,27 @@ import { supabase } from '../../../../utils/supabaseClient';
 import { useRouter } from 'next/router';
 import styles from '../../../../styles/BillingManagement.module.css';
 
+interface Branch {
+  id: number;
+  name: string;
+}
+
+interface Invoice {
+  id: number;
+  amount: number;
+  date: string;
+  status: string;
+}
+
 const BillingManagement = () => {
   const router = useRouter();
   const { restaurantId } = router.query;
 
-  const [branches, setBranches] = useState([]);
-  const [selectedBranch, setSelectedBranch] = useState(null);
+  const [branches, setBranches] = useState<Branch[]>([]); // Explicitly type the branches state
+  const [selectedBranch, setSelectedBranch] = useState<number | null>(null); // Ensure selectedBranch is typed
   const [email, setEmail] = useState('');
   const [frequency, setFrequency] = useState('monthly');
-  const [invoices, setInvoices] = useState([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]); // Explicitly type invoices
 
   useEffect(() => {
     const fetchBranches = async () => {
@@ -20,8 +32,8 @@ const BillingManagement = () => {
       if (error) {
         console.error('Error fetching branches:', error);
       } else {
-        setBranches(data);
-        setSelectedBranch(data[0]?.id);
+        setBranches(data as Branch[]); // Type cast to Branch[]
+        setSelectedBranch(data[0]?.id || null); // Ensure selectedBranch is valid
       }
     };
 
@@ -39,9 +51,9 @@ const BillingManagement = () => {
 
         if (settingsError) {
           console.error('Error fetching billing settings:', settingsError);
-        } else {
-          setEmail(settings.email);
-          setFrequency(settings.frequency);
+        } else if (settings) {
+          setEmail(settings.email || '');
+          setFrequency(settings.frequency || 'monthly');
         }
 
         const { data: invoices, error: invoicesError } = await supabase
@@ -52,7 +64,7 @@ const BillingManagement = () => {
         if (invoicesError) {
           console.error('Error fetching invoices:', invoicesError);
         } else {
-          setInvoices(invoices);
+          setInvoices(invoices as Invoice[]);
         }
       };
 
@@ -90,7 +102,7 @@ const BillingManagement = () => {
       <select
         id="branchSelect"
         value={selectedBranch || ''}
-        onChange={(e) => setSelectedBranch(e.target.value)}
+        onChange={(e) => setSelectedBranch(Number(e.target.value))}
       >
         {branches.map((branch) => (
           <option key={branch.id} value={branch.id}>

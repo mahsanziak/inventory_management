@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../../../utils/supabaseClient';
 
+interface Restaurant {
+  id: number;
+  name: string;
+}
+
+interface Invoice {
+  name: string;
+  total: number;
+}
+
 const Billing = () => {
   const [billingPeriod, setBillingPeriod] = useState('bi-weekly');
-  const [restaurants, setRestaurants] = useState([]);
-  const [invoices, setInvoices] = useState([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]); // Explicitly type the state
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
 
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -15,7 +25,7 @@ const Billing = () => {
       if (error) {
         console.error('Error fetching restaurants:', error);
       } else {
-        setRestaurants(data);
+        setRestaurants(data as Restaurant[]); // Cast data to Restaurant[]
       }
     };
 
@@ -36,8 +46,7 @@ const Billing = () => {
         return;
       }
 
-      // Fetch item data (cost_per_unit)
-      const itemIds = inventoryRequests.map(request => request.item_id);
+      const itemIds = inventoryRequests.map((request: any) => request.item_id);
       const { data: items, error: itemsError } = await supabase
         .from('items')
         .select('id, cost_per_unit')
@@ -48,17 +57,17 @@ const Billing = () => {
         return;
       }
 
-      const itemMap = items.reduce((acc, item) => {
+      const itemMap = items.reduce((acc: Record<number, number>, item: any) => {
         acc[item.id] = item.cost_per_unit;
         return acc;
       }, {});
 
-      const invoiceMap = restaurants.reduce((acc, restaurant) => {
+      const invoiceMap = restaurants.reduce<Record<number, Invoice>>((acc, restaurant) => {
         acc[restaurant.id] = { name: restaurant.name, total: 0 };
         return acc;
       }, {});
 
-      inventoryRequests.forEach(request => {
+      inventoryRequests.forEach((request: any) => {
         if (invoiceMap[request.restaurant_id]) {
           const totalCost = request.quantity * (itemMap[request.item_id] || 0);
           invoiceMap[request.restaurant_id].total += totalCost;

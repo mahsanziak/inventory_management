@@ -2,19 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../../../../utils/supabaseClient';
 import styles from '../../../../styles/Layout.module.css';
-import dynamic from 'next/dynamic';
 
-// Dynamically import html2pdf.js for client-side use only
-const html2pdf = dynamic(() => import('html2pdf.js'), { ssr: false });
+// Define the type for a location
+interface Location {
+  id: string;
+  name: string;
+}
 
 const Locations = () => {
   const router = useRouter();
   const { restaurantId } = router.query;
 
-  const [locations, setLocations] = useState([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
-  const [acceptedOrders, setAcceptedOrders] = useState({});
-  const [invoices, setInvoices] = useState([]);
+  const [acceptedOrders, setAcceptedOrders] = useState<Record<string, any[]>>({});
+  const [invoices, setInvoices] = useState<any[]>([]);
   const [selectedMonth, setSelectedMonth] = useState('All');
   const [selectedYear, setSelectedYear] = useState('All');
 
@@ -28,7 +30,7 @@ const Locations = () => {
       if (error) {
         console.error('Error fetching locations:', error);
       } else {
-        setLocations(data);
+        setLocations(data || []);
         if (data.length > 0) {
           setSelectedLocation(data[0].id);
           fetchAcceptedOrdersAndInvoices(data[0].id);
@@ -41,7 +43,7 @@ const Locations = () => {
     }
   }, [restaurantId]);
 
-  const fetchAcceptedOrdersAndInvoices = async (locationId) => {
+  const fetchAcceptedOrdersAndInvoices = async (locationId: string) => {
     const { data: orderData, error: orderError } = await supabase
       .from('inventory_requests')
       .select('*, items(name, cost_per_unit)')
@@ -54,7 +56,7 @@ const Locations = () => {
     } else {
       const filteredOrders = orderData.filter((order) => {
         const orderDate = new Date(order.created_at);
-        const orderMonth = orderDate.getMonth() + 1; // JavaScript months are 0-based
+        const orderMonth = orderDate.getMonth() + 1;
         const orderYear = orderDate.getFullYear();
 
         return (
@@ -70,7 +72,7 @@ const Locations = () => {
         }
         acc[billingPeriod].push(order);
         return acc;
-      }, {});
+      }, {} as Record<string, any[]>);
       setAcceptedOrders(groupedOrders);
     }
 
@@ -82,23 +84,23 @@ const Locations = () => {
     if (invoiceError) {
       console.error('Error fetching invoices:', invoiceError);
     } else {
-      setInvoices(invoiceData);
+      setInvoices(invoiceData || []);
     }
   };
 
-  const handleLocationChange = (locationId) => {
+  const handleLocationChange = (locationId: string) => {
     setSelectedLocation(locationId);
     fetchAcceptedOrdersAndInvoices(locationId);
   };
 
-  const handleMonthChange = (month) => {
+  const handleMonthChange = (month: string) => {
     setSelectedMonth(month);
     if (selectedLocation) {
       fetchAcceptedOrdersAndInvoices(selectedLocation);
     }
   };
 
-  const handleYearChange = (year) => {
+  const handleYearChange = (year: string) => {
     setSelectedYear(year);
     if (selectedLocation) {
       fetchAcceptedOrdersAndInvoices(selectedLocation);
@@ -106,24 +108,33 @@ const Locations = () => {
   };
 
   const handlePrint = () => {
-    const invoice = document.getElementById('invoiceTemplate');
-    if (invoice && html2pdf) {
-      html2pdf().from(invoice).save();
-    }
+    window.print(); // Use the browser's native print functionality
   };
 
   return (
     <div className={styles.locationsContainer}>
       <h1>Locations</h1>
       <div className={styles.filtersContainer}>
-        <select onChange={(e) => handleLocationChange(e.target.value)} value={selectedLocation || ''} className={styles.dropdown}>
-          <option value="" disabled>Select a location</option>
-          {locations.map(location => (
-            <option key={location.id} value={location.id}>{location.name}</option>
+        <select
+          onChange={(e) => handleLocationChange(e.target.value)}
+          value={selectedLocation || ''}
+          className={styles.dropdown}
+        >
+          <option value="" disabled>
+            Select a location
+          </option>
+          {locations.map((location) => (
+            <option key={location.id} value={location.id}>
+              {location.name}
+            </option>
           ))}
         </select>
 
-        <select onChange={(e) => handleMonthChange(e.target.value)} value={selectedMonth} className={styles.dropdown}>
+        <select
+          onChange={(e) => handleMonthChange(e.target.value)}
+          value={selectedMonth}
+          className={styles.dropdown}
+        >
           <option value="All">All</option>
           <option value="1">January</option>
           <option value="2">February</option>
@@ -139,20 +150,32 @@ const Locations = () => {
           <option value="12">December</option>
         </select>
 
-        <select onChange={(e) => handleYearChange(e.target.value)} value={selectedYear} className={styles.dropdown}>
+        <select
+          onChange={(e) => handleYearChange(e.target.value)}
+          value={selectedYear}
+          className={styles.dropdown}
+        >
           <option value="All">All</option>
           {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-            <option key={year} value={year}>{year}</option>
+            <option key={year} value={year}>
+              {year}
+            </option>
           ))}
         </select>
-        <button onClick={() => fetchAcceptedOrdersAndInvoices(selectedLocation)} className={styles.filterButton}>Filter</button>
+        <button
+          onClick={() => fetchAcceptedOrdersAndInvoices(selectedLocation!)}
+          className={styles.filterButton}
+        >
+          Filter
+        </button>
       </div>
 
       {selectedLocation && (
         <div className={styles.locationDetails}>
-          <h2 className={styles.locationTitle}>{locations.find(loc => loc.id === selectedLocation)?.name}</h2>
+          <h2 className={styles.locationTitle}>
+            {locations.find((loc) => loc.id === selectedLocation)?.name}
+          </h2>
 
-          {/* Accepted Orders Section */}
           <h3 className={styles.sectionTitle}>Accepted Orders by Billing Period</h3>
           {Object.keys(acceptedOrders).length > 0 ? (
             Object.keys(acceptedOrders).map((period) => (
@@ -179,16 +202,6 @@ const Locations = () => {
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colSpan="3"><strong>Subtotal</strong></td>
-                      <td colSpan="2">
-                        <strong>
-                          ${acceptedOrders[period].reduce((acc, order) => acc + (order.quantity * order.items.cost_per_unit), 0).toFixed(2)}
-                        </strong>
-                      </td>
-                    </tr>
-                  </tfoot>
                 </table>
               </div>
             ))
@@ -196,7 +209,6 @@ const Locations = () => {
             <p>No accepted orders.</p>
           )}
 
-          {/* Invoices Section */}
           <h3 className={styles.sectionTitle}>Invoices</h3>
           <table className={styles.table}>
             <thead>
@@ -221,49 +233,9 @@ const Locations = () => {
             </tbody>
           </table>
 
-          <button onClick={handlePrint} className={styles.printButton}>Print Invoice</button>
-
-          {/* Hidden Invoice Template */}
-          <div id="invoiceTemplate" style={{ display: 'none' }}>
-            <h1>Invoice</h1>
-            <p><strong>Restaurant Name:</strong> {locations.find(loc => loc.id === selectedLocation)?.name}</p>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Description</th>
-                  <th>Rate</th>
-                  <th>Quantity</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-  {Object.keys(acceptedOrders).map((period) => (
-    acceptedOrders[period].map((order, index) => (
-      <tr key={index}>
-        <td>{order.items.name}</td>
-        <td>${order.items.cost_per_unit.toFixed(2)}</td>
-        <td>{order.quantity}</td>
-        <td>${(order.quantity * order.items.cost_per_unit).toFixed(2)}</td>
-        <td>{new Date(order.created_at).toLocaleString()}</td>
-      </tr>
-    ))
-  ))}
-</tbody>
-
-              <tfoot>
-                <tr>
-                  <td colSpan="3"><strong>Subtotal</strong></td>
-                  <td>
-                    <strong>
-                      ${Object.keys(acceptedOrders).reduce((acc, period) => {
-                        return acc + acceptedOrders[period].reduce((periodAcc, order) => periodAcc + (order.quantity * order.items.cost_per_unit), 0);
-                      }, 0).toFixed(2)}
-                    </strong>
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+          <button onClick={handlePrint} className={styles.printButton}>
+            Print Invoice
+          </button>
         </div>
       )}
     </div>

@@ -7,11 +7,19 @@ import Clock from 'react-clock';
 import 'react-clock/dist/Clock.css'; // Import Clock styles
 import styles from '../../../../styles/CutOffTime.module.css';
 
+// Define the structure of the items
+interface Item {
+  id: number;
+  name: string;
+  cut_off_day?: string;
+  cut_off_time?: string;
+}
+
 const CutOffTime = () => {
   const router = useRouter();
   const { restaurantId } = router.query;
-  const [items, setItems] = useState([]);
-  const [editingItemId, setEditingItemId] = useState(null);
+  const [items, setItems] = useState<Item[]>([]); // Explicitly type the state
+  const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [editedCutOffDay, setEditedCutOffDay] = useState('');
   const [editedCutOffTime, setEditedCutOffTime] = useState('');
 
@@ -21,7 +29,7 @@ const CutOffTime = () => {
       if (error) {
         console.error('Error fetching items:', error);
       } else {
-        setItems(data);
+        setItems(data as Item[]); // Cast data to Item[]
       }
     };
 
@@ -29,7 +37,7 @@ const CutOffTime = () => {
   }, []);
 
   // Function to convert cut_off_time string to Date object for Clock component
-  const getTimeForClock = (time) => {
+  const getTimeForClock = (time: string | undefined) => {
     if (!time) return null;
     const [hours, minutes] = time.split(':').map(Number);
     const updatedTime = new Date();
@@ -37,14 +45,14 @@ const CutOffTime = () => {
     return updatedTime;
   };
 
-  const handleEditClick = (item) => {
+  const handleEditClick = (item: Item) => {
     setEditingItemId(item.id);
     setEditedCutOffDay(item.cut_off_day || '');
     setEditedCutOffTime(item.cut_off_time || '');
   };
 
-  const handleSaveClick = async (itemId) => {
-    const updates = {};
+  const handleSaveClick = async (itemId: number) => {
+    const updates: Partial<Item> = {};
     if (editedCutOffDay !== '') {
       updates.cut_off_day = editedCutOffDay;
     }

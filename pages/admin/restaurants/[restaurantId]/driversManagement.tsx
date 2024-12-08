@@ -12,7 +12,8 @@ interface Driver {
 
 const DriversManagement = () => {
   const [drivers, setDrivers] = useState<Driver[]>([]);
-  const [newDriver, setNewDriver] = useState<Partial<Driver>>({
+  const [newDriver, setNewDriver] = useState<Driver>({
+    id: '',
     name: '',
     contact_info: '',
     contact_email: '',
@@ -27,7 +28,7 @@ const DriversManagement = () => {
       if (error) {
         console.error('Error fetching drivers:', error);
       } else {
-        setDrivers(data);
+        setDrivers(data as Driver[]);
       }
     };
 
@@ -38,18 +39,20 @@ const DriversManagement = () => {
     if (newDriver.name && newDriver.contact_info && newDriver.contact_email) {
       const { data, error } = await supabase
         .from('drivers')
-        .insert([{ 
-          name: newDriver.name, 
-          contact_info: newDriver.contact_info, 
-          contact_email: newDriver.contact_email 
-        }])
+        .insert([
+          {
+            name: newDriver.name,
+            contact_info: newDriver.contact_info,
+            contact_email: newDriver.contact_email,
+          },
+        ])
         .select();
 
       if (error) {
         console.error('Error adding driver:', error);
       } else if (data && Array.isArray(data)) {
         setDrivers([...drivers, ...data]);
-        setNewDriver({ name: '', contact_info: '', contact_email: '' });
+        setNewDriver({ id: '', name: '', contact_info: '', contact_email: '' });
       } else {
         console.warn('Unexpected data format:', data);
       }
@@ -64,24 +67,31 @@ const DriversManagement = () => {
 
   const handleEditDriver = async () => {
     if (!selectedDriver) return;
-    const updatedDriver = { 
-      name: newDriver.name, 
-      contact_info: newDriver.contact_info, 
-      contact_email: newDriver.contact_email 
+    const updatedDriver = {
+      name: newDriver.name || selectedDriver.name,
+      contact_info: newDriver.contact_info || selectedDriver.contact_info,
+      contact_email: newDriver.contact_email || selectedDriver.contact_email,
     };
-    const { error } = await supabase.from('drivers').update(updatedDriver).eq('id', selectedDriver.id);
+    const { error } = await supabase
+      .from('drivers')
+      .update(updatedDriver)
+      .eq('id', selectedDriver.id);
 
     if (error) {
       console.error('Error updating driver:', error);
     } else {
-      setDrivers(drivers.map(driver => (driver.id === selectedDriver.id ? { ...driver, ...updatedDriver } : driver)));
+      setDrivers(
+        drivers.map((driver) =>
+          driver.id === selectedDriver.id ? { ...driver, ...updatedDriver } : driver
+        )
+      );
       closeEditModal();
     }
   };
 
   const closeEditModal = () => {
     setShowEditModal(false);
-    setNewDriver({ name: '', contact_info: '', contact_email: '' });
+    setNewDriver({ id: '', name: '', contact_info: '', contact_email: '' });
   };
 
   const handleRemoveDriver = async (id: string) => {
@@ -89,7 +99,7 @@ const DriversManagement = () => {
     if (error) {
       console.error('Error removing driver:', error);
     } else {
-      setDrivers(drivers.filter(driver => driver.id !== id));
+      setDrivers(drivers.filter((driver) => driver.id !== id));
     }
   };
 
@@ -114,19 +124,23 @@ const DriversManagement = () => {
           type="text"
           placeholder="Name"
           value={newDriver.name}
-          onChange={e => setNewDriver({ ...newDriver, name: e.target.value })}
+          onChange={(e) => setNewDriver({ ...newDriver, name: e.target.value })}
         />
         <input
           type="text"
           placeholder="Contact Info"
           value={newDriver.contact_info}
-          onChange={e => setNewDriver({ ...newDriver, contact_info: e.target.value })}
+          onChange={(e) =>
+            setNewDriver({ ...newDriver, contact_info: e.target.value })
+          }
         />
         <input
           type="email"
           placeholder="Contact Email"
           value={newDriver.contact_email}
-          onChange={e => setNewDriver({ ...newDriver, contact_email: e.target.value })}
+          onChange={(e) =>
+            setNewDriver({ ...newDriver, contact_email: e.target.value })
+          }
         />
         <button onClick={handleAddDriver}>Add Driver</button>
       </div>
@@ -143,15 +157,30 @@ const DriversManagement = () => {
           </tr>
         </thead>
         <tbody>
-          {drivers.map(driver => (
+          {drivers.map((driver) => (
             <tr key={driver.id}>
               <td>{driver.name}</td>
               <td>{driver.contact_info}</td>
               <td>{driver.contact_email}</td>
               <td className={styles.buttons}>
-                <button className={styles.editButton} onClick={() => handleOpenEditModal(driver)}>Edit</button>
-                <button className={styles.removeButton} onClick={() => handleRemoveDriver(driver.id)}>Remove</button>
-                <button className={styles.detailsButton} onClick={() => handleViewDetails(driver)}>View Details</button>
+                <button
+                  className={styles.editButton}
+                  onClick={() => handleOpenEditModal(driver)}
+                >
+                  Edit
+                </button>
+                <button
+                  className={styles.removeButton}
+                  onClick={() => handleRemoveDriver(driver.id)}
+                >
+                  Remove
+                </button>
+                <button
+                  className={styles.detailsButton}
+                  onClick={() => handleViewDetails(driver)}
+                >
+                  View Details
+                </button>
               </td>
             </tr>
           ))}
@@ -162,27 +191,37 @@ const DriversManagement = () => {
       {showEditModal && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
-            <button className={styles.closeIcon} onClick={closeEditModal}>&times;</button>
+            <button className={styles.closeIcon} onClick={closeEditModal}>
+              &times;
+            </button>
             <h3>Edit Driver Details</h3>
             <input
               type="text"
               placeholder="Name"
               value={newDriver.name}
-              onChange={e => setNewDriver({ ...newDriver, name: e.target.value })}
+              onChange={(e) =>
+                setNewDriver({ ...newDriver, name: e.target.value })
+              }
             />
             <input
               type="text"
               placeholder="Contact Info"
               value={newDriver.contact_info}
-              onChange={e => setNewDriver({ ...newDriver, contact_info: e.target.value })}
+              onChange={(e) =>
+                setNewDriver({ ...newDriver, contact_info: e.target.value })
+              }
             />
             <input
               type="email"
               placeholder="Contact Email"
               value={newDriver.contact_email}
-              onChange={e => setNewDriver({ ...newDriver, contact_email: e.target.value })}
+              onChange={(e) =>
+                setNewDriver({ ...newDriver, contact_email: e.target.value })
+              }
             />
-            <button className={styles.saveButton} onClick={handleEditDriver}>Save Changes</button>
+            <button className={styles.saveButton} onClick={handleEditDriver}>
+              Save Changes
+            </button>
           </div>
         </div>
       )}
@@ -191,7 +230,9 @@ const DriversManagement = () => {
       {showDetails && selectedDriver && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
-            <button className={styles.closeIcon} onClick={closeDetails}>&times;</button>
+            <button className={styles.closeIcon} onClick={closeDetails}>
+              &times;
+            </button>
             <h3>Orders for {selectedDriver.name}</h3>
             <table className={styles.table}>
               <thead>

@@ -2,178 +2,200 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import styles from '../../../../styles/Layout.module.css';
 import { supabase } from '../../../../utils/supabaseClient';
-import { sendSMS } from '../../../../utils/twilioClient'; // Adjust the path if needed
 
+// Define types
+interface InventoryRequest {
+  id: string;
+  restaurant_id: string;
+  item_id: string;
+  quantity: number;
+  unit: string;
+  timeline: string;
+  notes: string;
+  status: string;
+  called_driver: boolean;
+}
+
+interface Driver {
+  id: string;
+  name: string;
+  contact_info: string;
+}
 
 const Overview = () => {
   const router = useRouter();
   const { restaurantId } = router.query;
 
   const [activeTab, setActiveTab] = useState('pending');
-  const [pendingOrders, setPendingOrders] = useState([]);
-  const [pastOrders, setPastOrders] = useState([]);
-  const [acceptedOrders, setAcceptedOrders] = useState([]);
-  const [restaurants, setRestaurants] = useState({});
-  const [items, setItems] = useState({});
+  const [pendingOrders, setPendingOrders] = useState<InventoryRequest[]>([]);
+  const [pastOrders, setPastOrders] = useState<InventoryRequest[]>([]);
+  const [acceptedOrders, setAcceptedOrders] = useState<InventoryRequest[]>([]);
+  const [restaurants, setRestaurants] = useState<Record<string, string>>({});
+  const [items, setItems] = useState<Record<string, string>>({});
   const [newOrderNotification, setNewOrderNotification] = useState(false);
-  const [drivers, setDrivers] = useState([]);
-  const [loadingOrderId, setLoadingOrderId] = useState(null);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [loadingOrderId, setLoadingOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: restaurantData, error: restaurantError } = await supabase
-        .from('restaurants')
-        .select('*');
+      try {
+        // Fetch restaurants
+        const { data: restaurantData, error: restaurantError } = await supabase
+          .from('restaurants')
+          .select('*');
+        if (restaurantError) throw restaurantError;
 
-      if (restaurantError) {
-        console.error('Error fetching restaurants:', restaurantError);
-      } else {
-        const restaurantMap = restaurantData.reduce((acc, restaurant) => {
+        const restaurantMap = (restaurantData || []).reduce((acc, restaurant) => {
           acc[restaurant.id] = restaurant.name;
           return acc;
-        }, {});
+        }, {} as Record<string, string>);
         setRestaurants(restaurantMap);
-      }
 
-      const { data: itemData, error: itemError } = await supabase
-        .from('items')
-        .select('*');
+        // Fetch items
+        const { data: itemData, error: itemError } = await supabase
+          .from('items')
+          .select('*');
+        if (itemError) throw itemError;
 
-      if (itemError) {
-        console.error('Error fetching items:', itemError);
-      } else {
-        const itemMap = itemData.reduce((acc, item) => {
+        const itemMap = (itemData || []).reduce((acc, item) => {
           acc[item.id] = item.name;
           return acc;
-        }, {});
+        }, {} as Record<string, string>);
         setItems(itemMap);
-      }
 
-      const { data: pendingData, error: pendingError } = await supabase
-        .from('inventory_requests')
-        .select('*')
-        .eq('status', 'pending');
+        // Fetch pending orders
+        const { data: pendingData, error: pendingError } = await supabase
+          .from('inventory_requests')
+          .select('*')
+          .eq('status', 'pending');
+        if (pendingError) throw pendingError;
+        setPendingOrders(pendingData || []);
 
-      if (pendingError) {
-        console.error('Error fetching pending orders:', pendingError);
-      } else {
-        setPendingOrders(pendingData);
-      }
+        // Fetch accepted orders
+        const { data: acceptedData, error: acceptedError } = await supabase
+          .from('inventory_requests')
+          .select('*')
+          .eq('status', 'accepted')
+          .eq('called_driver', false);
+        if (acceptedError) throw acceptedError;
+        setAcceptedOrders(acceptedData || []);
 
-      // Fetch accepted orders that have not yet called the drivers
-      const { data: acceptedData, error: acceptedError } = await supabase
-        .from('inventory_requests')
-        .select('*')
-        .eq('status', 'accepted')
-        .eq('called_driver', false);
+        // Fetch past orders
+        const { data: pastData, error: pastError } = await supabase
+          .from('inventory_requests')
+          .select('*')
+          .eq('status', 'accepted')
+          .eq('called_driver', true);
+        if (pastError) throw pastError;
+        setPastOrders(pastData || []);
 
-      if (acceptedError) {
-        console.error('Error fetching accepted orders:', acceptedError);
-      } else {
-        setAcceptedOrders(acceptedData);
-      }
-
-      // Fetch past orders where status is accepted and called_driver is true
-      const { data: pastData, error: pastError } = await supabase
-        .from('inventory_requests')
-        .select('*')
-        .eq('status', 'accepted')
-        .eq('called_driver', true);
-
-      if (pastError) {
-        console.error('Error fetching past orders:', pastError);
-      } else {
-        setPastOrders(pastData);
-      }
-
-      // Fetch driver data
-      const { data: driverData, error: driverError } = await supabase
-        .from('drivers')
-        .select('*');
-
-      if (driverError) {
-        console.error('Error fetching drivers:', driverError);
-      } else {
-        setDrivers(driverData);
+        // Fetch drivers
+        const { data: driverData, error: driverError } = await supabase
+          .from('drivers')
+          .select('*');
+        if (driverError) throw driverError;
+        setDrivers(driverData || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
       }
     };
 
     fetchData();
 
     const channel = supabase
-      .channel('public:inventory_requests')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'inventory_requests' }, (payload) => {
-        if (payload.new.status === 'pending') {
-          setPendingOrders((prevOrders) => [...prevOrders, payload.new]);
+    .channel('public:inventory_requests')
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'inventory_requests' },
+      (payload) => {
+        if (payload.new && validateInventoryRequest(payload.new)) {
+          setPendingOrders((prev) => [...prev, payload.new as InventoryRequest]); // Type assertion here
           setNewOrderNotification(true);
-
+  
           setTimeout(() => {
             setNewOrderNotification(false);
           }, 5000);
+        } else {
+          console.error('Invalid data format received:', payload.new);
         }
-      })
-      .subscribe();
+      }
+    )
+    .subscribe();
+  
 
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
 
+  const validateInventoryRequest = (data: any): data is InventoryRequest => {
+    return (
+      typeof data.id === 'string' &&
+      typeof data.restaurant_id === 'string' &&
+      typeof data.item_id === 'string' &&
+      typeof data.quantity === 'number' &&
+      typeof data.unit === 'string' &&
+      typeof data.timeline === 'string' &&
+      typeof data.notes === 'string' &&
+      typeof data.status === 'string' &&
+      typeof data.called_driver === 'boolean'
+    );
+  };
+
+  const handleNotificationClick = () => {
+    setNewOrderNotification(false);
+    setActiveTab('pending');
+  };
+
   const handleAcceptOrder = async (orderId: string) => {
-    const acceptedOrder = pendingOrders.find(order => order.id === orderId);
-    if (acceptedOrder) {
+    const order = pendingOrders.find((o) => o.id === orderId);
+    if (!order) return;
+
+    try {
       const { error } = await supabase
         .from('inventory_requests')
         .update({ status: 'accepted' })
         .eq('id', orderId);
+      if (error) throw error;
 
-      if (error) {
-        console.error('Error accepting order:', error);
-      } else {
-        setPendingOrders(pendingOrders.filter(order => order.id !== orderId));
-        setAcceptedOrders([...acceptedOrders, { ...acceptedOrder, status: 'accepted', called_driver: false }]);
-      }
+      setPendingOrders(pendingOrders.filter((o) => o.id !== orderId));
+      setAcceptedOrders([...acceptedOrders, { ...order, status: 'accepted', called_driver: false }]);
+    } catch (error) {
+      console.error('Error accepting order:', error);
     }
   };
 
   const handleRejectOrder = async (orderId: string) => {
-    const rejectedOrder = pendingOrders.find(order => order.id === orderId);
-    if (rejectedOrder) {
+    const order = pendingOrders.find((o) => o.id === orderId);
+    if (!order) return;
+
+    try {
       const { error } = await supabase
         .from('inventory_requests')
         .update({ status: 'rejected' })
         .eq('id', orderId);
+      if (error) throw error;
 
-      if (error) {
-        console.error('Error rejecting order:', error);
-      } else {
-        setPendingOrders(pendingOrders.filter(order => order.id !== orderId));
-        setPastOrders([...pastOrders, { ...rejectedOrder, status: 'rejected' }]);
-      }
+      setPendingOrders(pendingOrders.filter((o) => o.id !== orderId));
+      setPastOrders([...pastOrders, { ...order, status: 'rejected' }]);
+    } catch (error) {
+      console.error('Error rejecting order:', error);
     }
   };
 
   const handleCallAllDrivers = async (orderId: string) => {
     setLoadingOrderId(orderId);
+
+    const order = acceptedOrders.find((o) => o.id === orderId);
+    if (!order) return;
+
     try {
-      const selectedOrder = acceptedOrders.find((order) => order.id === orderId);
-      if (!selectedOrder) {
-        console.error('Order not found');
-        return;
-      }
-  
-      // Update the database to mark called_driver as true and update status to 'accepted'
-      const { error: updateError } = await supabase
+      const { error } = await supabase
         .from('inventory_requests')
-        .update({ called_driver: true, status: 'accepted' })
+        .update({ called_driver: true })
         .eq('id', orderId);
-  
-      if (updateError) {
-        console.error('Error updating the order in the database:', updateError);
-        return;
-      }
-  
-      // Send SMS via the API route
+      if (error) throw error;
+
       for (const driver of drivers) {
         try {
           const response = await fetch('/api/sendSMS', {
@@ -181,42 +203,24 @@ const Overview = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               phoneNumber: driver.contact_info,
-              message: 'Test message: You have been called for a new order.',
+              message: `New order is available. Check your dashboard.`,
             }),
           });
-  
-          const result = await response.json();
-  
+
           if (!response.ok) {
-            console.error(`Error sending SMS to ${driver.name}:`, result.error);
-          } else {
-            console.log(`SMS sent to ${driver.name} at ${driver.contact_info}`);
+            console.error(`Error sending SMS to ${driver.name}`);
           }
-        } catch (smsError) {
-          console.error(`Error sending SMS to ${driver.name}:`, smsError);
+        } catch (err) {
+          console.error(`Error sending SMS to ${driver.name}:`, err);
         }
       }
-  
-      // Move the order from accepted to past orders
-      setAcceptedOrders(acceptedOrders.filter((order) => order.id !== orderId));
-      setPastOrders([...pastOrders, { ...selectedOrder, called_driver: true, status: 'accepted' }]);
-  
-      alert('Drivers have been called for this order, and notifications have been sent.');
+
+      setAcceptedOrders(acceptedOrders.filter((o) => o.id !== orderId));
+      setPastOrders([...pastOrders, { ...order, called_driver: true }]);
     } catch (error) {
       console.error('Error calling drivers:', error);
     } finally {
       setLoadingOrderId(null);
-    }
-  };
-  
-
-  
-  
-
-  const handleNotificationClick = () => {
-    setNewOrderNotification(false);
-    if (restaurantId) {
-      setActiveTab('pending');
     }
   };
 
@@ -247,10 +251,11 @@ const Overview = () => {
       {newOrderNotification && (
         <div className={styles.notification} onClick={handleNotificationClick}>
           <span>New order received! Click to view.</span>
-          <button onClick={() => setNewOrderNotification(false)} className={styles.closeButton}>×</button>
+          <button onClick={() => setNewOrderNotification(false)} className={styles.closeButton}>
+            ×
+          </button>
         </div>
       )}
-
       {activeTab === 'pending' && (
         <>
           <h2>Pending Orders</h2>
